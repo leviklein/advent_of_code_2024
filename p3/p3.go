@@ -1,9 +1,8 @@
-package template
+package p3
 
 import (
 	"embed"
-	// "math"
-	"slices"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -11,7 +10,7 @@ import (
 )
 
 var (
-	//go:embed input.txt input_test.txt
+	//go:embed input.txt input_test.txt input_test_pt2.txt
 	f embed.FS
 )
 
@@ -27,17 +26,32 @@ func getInt(s string) int {
 	return n
 }
 
-func parseInput(input []string) [][]int {
+func findNumbers(input []string) [][]int {
 	var output [][]int
 	for _, s := range input {
 		var line []int
-		result := strings.Split(s, " ")
+		re := regexp.MustCompile(`mul\((\d{1,3}),(\d{1,3})\)`)
+		result := re.FindAllStringSubmatch(s, -1)
 		for _, n := range result {
-			line = append(line, getInt(n))
+			line = []int{getInt(n[1]), getInt(n[2])}
+			output = append(output, line)
 		}
-		output = append(output, line)
 	}
 	return output
+}
+
+func parseInputPart2(input []string) [][]int {
+	// var output [][]int
+	var substring string
+
+	big := strings.Join(input, "")
+	re := regexp.MustCompile(`don't\(\).*?do\(\)`)
+	substring = re.ReplaceAllString(big, "")
+	re = regexp.MustCompile(`don't\(\).*`)
+	substring = re.ReplaceAllString(substring, "")
+
+	return findNumbers([]string{substring})
+
 }
 
 func checkLine(l []int) bool {
@@ -83,34 +97,18 @@ func Solve(part, filename string) any {
 
 func part1(input []string) int {
 	var answer int
-	parsed := parseInput(input)
+	parsed := findNumbers(input)
 	for _, l := range parsed {
-		stable := checkLine(l)
-		if stable {
-			answer += 1
-		}
+		answer += l[0] * l[1]
 	}
 	return answer
 }
 
 func part2(input []string) int {
 	var answer int
-	parsed := parseInput(input)
+	parsed := parseInputPart2(input)
 	for _, l := range parsed {
-		stable := checkLine(l)
-		if !stable {
-			for i := range l {
-				s1 := l[:i]
-				s2 := l[i+1:]
-				testArray := slices.Concat(s1, s2)
-				if checkLine(testArray) {
-					answer += 1
-					break
-				}
-			}
-		} else {
-			answer += 1
-		}
+		answer += l[0] * l[1]
 	}
 	return answer
 }
